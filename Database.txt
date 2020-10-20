@@ -1,0 +1,44 @@
+1 a) 
+
+CREATE TABLE tblStudents  
+    (StudentID INTEGER NOT NULL, 
+    [Student Name] VARCHAR(50) NOT NULL, 
+    [Student Class] VARCHAR(50) NOT NULL, 
+    Interests VARCHAR(200), 
+    Subjects VARCHAR(100),
+    PRIMARY KEY (StudentID),
+	CreatedOn timestamp
+);
+
+CREATE INDEX idxStudent on tblStudents([Student Class], StudentID, [Student Name]);
+
+1 b) Prepare scripts to maintain the timeseries and audit
+
+CREATE TABLE tblStudentsAudit
+(
+  StudentAuditID integer Identity(1,1) primary key,
+  StudentID integer,
+  CreatedOn datetime,
+  LastUpdatedOn datetime
+)
+GO
+  
+CREATE TRIGGER tblTriggerAuditRecord on tblStudents
+AFTER UPDATE, INSERT
+AS
+BEGIN
+  INSERT INTO tblStudentsAudit 
+  (StudentID, CreatedOn, LastUpdatedOn )
+  SELECT i.StudentID, i.CreatedOn, getdate() 
+  FROM  tblStudents t 
+  INNER JOIN INSERTED i ON t.StudentID=i.StudentID 
+END
+GO
+
+2) Assuming the table name as 'dbo.ContractTradeData'
+
+CREATE PROCEDURE getExpiringContract
+AS
+SELECT ContractCode, Ticker, LastTrade, MAX(datediff(day, LastTrade, getdate())) AS DaysExpiring
+FROM dbo.ContractTradeData 
+GO
